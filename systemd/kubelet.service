@@ -1,0 +1,16 @@
+[Unit]
+Description=Run bootstrap Kubelet
+
+[Service]
+Restart=always
+RestartSec=30
+ExecStartPre=/usr/bin/flock /var/run/kubelet.lock true
+ExecStart=/tmp/local/bin/coreos/patched-kubelet \
+  --runonce \
+  --runonce-timeout=60s \
+  --lock-file=/var/run/kubelet.lock \
+  --api_servers=http://127.0.0.1:8080 \
+  --allow-privileged=true
+
+[Install]
+WantedBy=multi-user.target

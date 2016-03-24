@@ -1,0 +1,72 @@
+{
+	"apiVersion": "extensions/v1beta1",
+	"kind": "Deployment",
+	"metadata": {
+		"name": "apiserver",
+		"labels": {
+			"name": "apiserver",
+			"version": "1.2.0-beta.0-aaron0"
+		}
+	},
+	"spec": {
+		"replicas": 1,
+		"template": {
+			"metadata": {
+				"labels": {
+					"app": "apiserver"
+				}
+			},
+			"spec": {
+				"hostNetwork": true,
+				"containers": [{
+					"name": "apiserver",
+					"image": "quay.io/peanutbutter/hyperkube:v1.2.0-beta.0-aaron0",
+					"command": [
+						"./hyperkube",
+						"apiserver",
+						"--v=4",
+						"--cert-dir=/var/run/kubernetes",
+						"--service-account-key-file=/etc/kubernetes/ssl/apiserver-key.pem",
+						"--allow-privileged",
+						"--service-account-lookup=false",
+						"--admission-control=NamespaceLifecycle,LimitRanger,SecurityContextDeny,ServiceAccount,ResourceQuota",
+						"--insecure-bind-address=127.0.0.1",
+						"--insecure-port=8080",
+						"--etcd-servers=http://127.0.0.1:4001",
+						"--service-cluster-ip-range=10.0.0.0/24",
+						"--runtime-config=extensions/v1beta1/deployments=true,extensions/v1beta1/daemonsets=true",
+						"--tls-cert-file=/etc/kubernetes/ssl/apiserver.pem",
+						"--tls-private-key-file=/etc/kubernetes/ssl/apiserver-key.pem",
+						"--client-ca-file=/etc/kubernetes/ssl/ca.pem"
+					],
+					"volumeMounts": [
+						{
+							"name": "ssl-certs-host",
+							"mountPath": "/etc/ssl/certs",
+							"readOnly": true
+						},
+						{
+							"name": "etc-ssl-certs",
+							"mountPath": "/etc/kubernetes/ssl",
+							"readOnly": true
+						}
+					]
+				}],
+				"volumes": [
+					{
+						"name": "etc-ssl-certs",
+						"hostPath": {
+							"path": "/etc/kubernetes/ssl"
+						}
+					},
+					{
+						"name": "ssl-certs-host",
+						"hostPath": {
+							"path": "/usr/share/ca-certificates"
+						}
+					}
+				]
+			}
+		}
+	}
+}

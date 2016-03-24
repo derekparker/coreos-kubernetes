@@ -46,96 +46,29 @@ function init_templates {
         echo "TEMPLATE: $TEMPLATE"
         mkdir -p $(dirname $TEMPLATE)
         cat << EOF > $TEMPLATE
-[Service]
-ExecStartPre=/usr/bin/mkdir -p /etc/kubernetes/manifests
+[Unit]
+Description=Run bootstrap Kubelet
 
-Environment=KUBELET_VERSION=${K8S_VER}
-ExecStart=/usr/lib/coreos/kubelet-wrapper \
-  --api_servers=${CONTROLLER_ENDPOINT} \
-  --register-node=true \
-  --allow-privileged=true \
-  --config=/etc/kubernetes/manifests \
-  --hostname-override=${ADVERTISE_IP} \
-  --cluster_dns=${DNS_SERVICE_IP} \
-  --cluster_domain=cluster.local \
+[Service]
+Restart=always
+RestartSec=5
+ExecStart=/tmp/local/bin/coreos/patched-kubelet \
+  --runonce \
+  --runonce-timeout=60s \
+  --v=4 \
+  --lock-file=/var/run/lock/kubelet.lock \
+  --api_servers=172.17.4.101:6443 \
+  --allow-privileged \
+  --container-runtime=docker \
+  --hostname-override=172.17.4.201 \
+  --node-labels=type=worker \
+  --address=172.17.4.201 \
   --kubeconfig=/etc/kubernetes/worker-kubeconfig.yaml \
   --tls-cert-file=/etc/kubernetes/ssl/worker.pem \
   --tls-private-key-file=/etc/kubernetes/ssl/worker-key.pem
-Restart=always
-RestartSec=10
 
 [Install]
 WantedBy=multi-user.target
-EOF
-    }
-
-    local TEMPLATE=/etc/kubernetes/worker-kubeconfig.yaml
-    [ -f $TEMPLATE ] || {
-        echo "TEMPLATE: $TEMPLATE"
-        mkdir -p $(dirname $TEMPLATE)
-        cat << EOF > $TEMPLATE
-apiVersion: v1
-kind: Config
-clusters:
-- name: local
-  cluster:
-    certificate-authority: /etc/kubernetes/ssl/ca.pem
-users:
-- name: kubelet
-  user:
-    client-certificate: /etc/kubernetes/ssl/worker.pem
-    client-key: /etc/kubernetes/ssl/worker-key.pem
-contexts:
-- context:
-    cluster: local
-    user: kubelet
-  name: kubelet-context
-current-context: kubelet-context
-EOF
-    }
-
-    local TEMPLATE=/etc/kubernetes/manifests/kube-proxy.yaml
-    [ -f $TEMPLATE ] || {
-        echo "TEMPLATE: $TEMPLATE"
-        mkdir -p $(dirname $TEMPLATE)
-        cat << EOF > $TEMPLATE
-apiVersion: v1
-kind: Pod
-metadata:
-  name: kube-proxy
-  namespace: kube-system
-spec:
-  hostNetwork: true
-  containers:
-  - name: kube-proxy
-    image: quay.io/coreos/hyperkube:$K8S_VER
-    command:
-    - /hyperkube
-    - proxy
-    - --master=${CONTROLLER_ENDPOINT}
-    - --kubeconfig=/etc/kubernetes/worker-kubeconfig.yaml
-    - --proxy-mode=iptables
-    securityContext:
-      privileged: true
-    volumeMounts:
-      - mountPath: /etc/ssl/certs
-        name: "ssl-certs"
-      - mountPath: /etc/kubernetes/worker-kubeconfig.yaml
-        name: "kubeconfig"
-        readOnly: true
-      - mountPath: /etc/kubernetes/ssl
-        name: "etc-kube-ssl"
-        readOnly: true
-  volumes:
-    - name: "ssl-certs"
-      hostPath:
-        path: "/usr/share/ca-certificates"
-    - name: "kubeconfig"
-      hostPath:
-        path: "/etc/kubernetes/worker-kubeconfig.yaml"
-    - name: "etc-kube-ssl"
-      hostPath:
-        path: "/etc/kubernetes/ssl"
 EOF
     }
 
