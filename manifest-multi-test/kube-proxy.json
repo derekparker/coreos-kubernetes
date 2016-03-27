@@ -1,0 +1,66 @@
+{
+	"apiVersion": "extensions/v1beta1",
+	"kind": "DaemonSet",
+	"metadata": {
+		"name": "kube-proxy",
+		"namespace": "kube-system",
+		"labels": {
+			"name": "kube-proxy",
+			"version": "1.2.0-beta.0-aaron0"
+		}
+	},
+	"spec": {
+		"template": {
+			"metadata": {
+				"labels": {
+					"app": "kube-proxy"
+				}
+			},
+			"spec": {
+				"nodeSelector": {
+					"type": "master"
+				},
+				"hostNetwork": true,
+				"containers": [{
+					"name": "kube-proxy",
+					"image": "quay.io/peanutbutter/hyperkube:v1.2.0-beta.0-aaron0",
+					"command": [
+						"./hyperkube",
+						"proxy",
+						"--v=4",
+						"--master=127.0.0.1:8080"
+					],
+					"securityContext": {
+						"privileged": true
+					},
+					"volumeMounts": [
+						{
+							"mountPath": "/etc/ssl/certs",
+							"name": "ssl-certs-host",
+							"readOnly": true
+						},
+						{
+							"mountPath": "/etc/kubernetes",
+							"name": "etc-kube",
+							"readOnly": true
+						}
+					]
+				}],
+				"volumes": [
+					{
+						"name": "ssl-certs-host",
+						"hostPath": {
+							"path": "/etc/ssl/certs"
+						}
+					},
+					{
+						"name": "etc-kube",
+						"hostPath": {
+							"path": "/etc/kubernetes"
+						}
+					}
+				]
+			}
+		}
+	}
+}

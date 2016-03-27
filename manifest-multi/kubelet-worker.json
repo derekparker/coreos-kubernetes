@@ -38,11 +38,13 @@
 						"--container-runtime=docker",
 						"--hostname-override=172.17.4.201",
 						"--address=172.17.4.201",
-						"--api-servers=172.17.4.101:6433",
+						"--api-servers=https://172.17.4.101:6433",
 						"--allow-privileged",
 						"--lock-file=/var/run/lock/kubelet.lock",
 						"--kubeconfig=/etc/kubernetes/worker-kubeconfig.yaml",
 						"--tls-cert-file=/etc/kubernetes/ssl/worker.pem",
+						"--cluster-dns=10.3.0.10",
+						"--cluster-domain=cluster.local",
 						"--tls-private-key-file=/etc/kubernetes/ssl/worker-key.pem"
 					]
 				}]

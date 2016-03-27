@@ -37,6 +37,8 @@
 						"--address=127.0.0.1",
 						"--api-servers=127.0.0.1:8080",
 						"--allow-privileged",
+						"--cluster-dns=10.3.0.10",
+						"--cluster-domain=cluster.local",
 						"--lock-file=/var/run/lock/kubelet.lock"
 					],
 					"securityContext": {

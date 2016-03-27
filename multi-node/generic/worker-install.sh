@@ -57,7 +57,7 @@ ExecStart=/tmp/local/bin/coreos/patched-kubelet \
   --runonce-timeout=60s \
   --v=4 \
   --lock-file=/var/run/lock/kubelet.lock \
-  --api_servers=172.17.4.101:6443 \
+  --api_servers=https://172.17.4.101:6443 \
   --allow-privileged \
   --container-runtime=docker \
   --hostname-override=172.17.4.201 \
@@ -69,6 +69,31 @@ ExecStart=/tmp/local/bin/coreos/patched-kubelet \
 
 [Install]
 WantedBy=multi-user.target
+EOF
+    }
+
+    local TEMPLATE=/etc/kubernetes/worker-kubeconfig.yaml
+    [ -f $TEMPLATE ] || {
+        echo "TEMPLATE: $TEMPLATE"
+        mkdir -p $(dirname $TEMPLATE)
+        cat << EOF > $TEMPLATE
+apiVersion: v1
+kind: Config
+clusters:
+- name: local
+  cluster:
+    certificate-authority: /etc/kubernetes/ssl/ca.pem
+users:
+- name: kubelet
+  user:
+    client-certificate: /etc/kubernetes/ssl/worker.pem
+    client-key: /etc/kubernetes/ssl/worker-key.pem
+contexts:
+- context:
+    cluster: local
+    user: kubelet
+  name: kubelet-context
+current-context: kubelet-context
 EOF
     }
 

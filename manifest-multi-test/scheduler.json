@@ -1,0 +1,35 @@
+{
+	"apiVersion": "extensions/v1beta1",
+	"kind": "Deployment",
+	"metadata": {
+		"name": "scheduler",
+		"namespace": "kube-system",
+		"labels": {
+			"name": "scheduler",
+			"version": "1.2.0-beta.0-aaron0"
+		}
+	},
+	"spec": {
+		"replicas": 1,
+		"template": {
+			"metadata": {
+				"labels": {
+					"app": "scheduler"
+				}
+			},
+			"spec": {
+				"hostNetwork": true,
+				"containers": [{
+					"name": "scheduler",
+					"image": "quay.io/peanutbutter/hyperkube:v1.2.0-beta.0-aaron0",
+					"command": [
+						"./hyperkube",
+						"scheduler",
+						"--v=4",
+						"--master=127.0.0.1:8080"
+					]
+				}]
+			}
+		}
+	}
+}

@@ -1,0 +1,56 @@
+{
+	"apiVersion": "extensions/v1beta1",
+	"kind": "DaemonSet",
+	"metadata": {
+		"name": "kubelet-worker",
+		"namespace": "kube-system",
+		"labels": {
+			"name": "kubelet-worker",
+			"version": "1.2.0-beta.0-aaron0"
+		}
+	},
+	"spec": {
+		"template": {
+			"metadata": {
+				"labels": {
+					"component": "kubelet-worker"
+				}
+			},
+			"spec": {
+				"nodeSelector": {
+					"type": "worker"
+				},
+				"hostNetwork": true,
+				"hostPID": true,
+				"containers": [{
+					"name": "kubelet-worker",
+					"image": "quay.io/peanutbutter/hyperkube:v1.2.0-beta.0-aaron0",
+					"securityContext": {
+						"privileged": true
+					},
+					"command": [
+						"/nsenter",
+						"--target=1",
+						"--mount",
+						"--wd=.",
+						"--",
+						"./hyperkube",
+						"kubelet",
+						"--container-runtime=docker",
+						"--hostname-override=172.17.4.201",
+						"--address=172.17.4.201",
+						"--api-servers=https://172.17.4.101:6443",
+						"--node-labels=type=worker",
+						"--allow-privileged",
+						"--lock-file=/var/run/lock/kubelet.lock",
+						"--kubeconfig=/etc/kubernetes/worker-kubeconfig.yaml",
+						"--cluster-dns=10.3.0.10",
+						"--cluster-domain=cluster.local",
+						"--tls-cert-file=/etc/kubernetes/ssl/worker.pem",
+						"--tls-private-key-file=/etc/kubernetes/ssl/worker-key.pem"
+					]
+				}]
+			}
+		}
+	}
+}

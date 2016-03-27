@@ -1,0 +1,64 @@
+{
+	"apiVersion": "extensions/v1beta1",
+	"kind": "Deployment",
+	"metadata": {
+		"name": "controller-manager",
+		"namespace": "kube-system",
+		"labels": {
+			"name": "controller-manager",
+			"version": "1.2.0-beta.0-aaron0"
+		}
+	},
+	"spec": {
+		"replicas": 1,
+		"template": {
+			"metadata": {
+				"labels": {
+					"app": "controller-manager"
+				}
+			},
+			"spec": {
+				"hostNetwork": true,
+				"containers": [{
+					"name": "controller-manager",
+					"image": "quay.io/peanutbutter/hyperkube:v1.2.0-beta.0-aaron0",
+					"command": [
+						"./hyperkube",
+						"controller-manager",
+						"--v=4",
+						"--service-account-private-key-file=/etc/kubernetes/ssl/apiserver-key.pem",
+						"--root-ca-file=/etc/kubernetes/ssl/ca.pem",
+						"--enable-hostpath-provisioner=false",
+						"--master=127.0.0.1:8080"
+					],
+					"volumeMounts": [
+						{
+							"name": "etc-kubernetes-ssl",
+							"mountPath": "/etc/kubernetes/ssl",
+							"readOnly": true
+						},
+						{
+							"name": "ssl-host",
+							"mountPath": "/etc/ssl/certs",
+							"readOnly": true
+						}
+					]
+				}],
+				"volumes": [
+					{
+						"name": "etc-kubernetes-ssl",
+						"hostPath": {
+							"path": "/etc/kubernetes/ssl"
+						}
+					},
+					{
+						"name": "ssl-host",
+						"hostPath": {
+							"path": "/usr/share/ca-certificates"
+						}
+					}
+				]
+			}
+		}
+	}
+}
